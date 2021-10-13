@@ -1,0 +1,638 @@
+---
+title: "ASSR2_80Hz"
+author: "Stefan Wiens & Malina Szychowska"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    df_print: paged
+    highlight: tango
+    theme: united
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+
+---
+<style>
+body {text-align: justify}
+</style>
+
+```{r setup, include = FALSE}
+#'echo = False' hides *all* code chunks below when knitted 
+#'warning = F' hides *all* warnings messages below when knitted 
+#'message = F' hides *all* messages below when knitted 
+
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+knitr::opts_chunk$set(fig.width=12, fig.asp=0.6, fig.align="center")
+```
+
+```{r prepare R, echo = FALSE, include = FALSE}
+# clear memory and set random seed
+rm(list = ls()) # clear memory
+graphics.off()  # clear all plots
+cat("\014")     # clear console (same as Ctrl-L in console)
+set.seed(123)   # Makes it reproducable also if random number generators are used
+
+# set up working directory
+experiment = 'ASSR2'
+
+# set up working directory
+experiment = 'ASSR2'
+
+## Stefan
+#dir_main = file.path('C:','Users',Sys.getenv("USERNAME"),'Documents','Box Sync',experiment)
+
+# Malina
+dir_main = file.path('C:','Users',Sys.getenv("USERNAME"),'Box Sync','Malina_dissertation', 'additional analyses for the defense', '80Hz for clear peaks')
+
+# knit in R directory
+knitr::opts_knit$set(file.path(dir_main,'R_scripts'))
+
+source('ASSR2_80Hz_set_up.r')
+
+# save output data files to result directory
+dir_res = file.path(dir_main,'results')
+
+# save figures to an extra directory
+dir_fig = file.path(dir_res, 'figures')
+
+# define if extra output should be printed
+rout = TRUE
+
+# change to working directory (not necessary)
+# setwd(file.path(dir_main,'R_scripts'))
+```
+
+## Define sample
+```{r choose to run final sample or all subjects, echo = F}
+#nowsample = "subset" # exclude subjects 5-12 who were tested before formal preregistration
+nowsample = "all" #includes all subjects 
+```
+Note: The analyses use the sample of **`r nowsample`** subjects.    
+
+For **all** subjects, 8 pilot subjects were included. These were tested before formal preregistration.    
+For **subset** subjects, 8 pilot subjects were excluded.  
+
+```{r read in audio EEG data, echo = rout}
+D=read.csv(file.path(dir_res, paste0("data_audio_signal_noise_N_33.tsv")), sep="\t",header=TRUE, dec=".")
+```
+
+```{r check for unique subject numbers, echo = rout}
+if (any(as.numeric(table(D$fp))!=1)){
+  stop("Subject numbers are not unique!")
+}
+```
+
+```{r create EEG amp variables, echo = rout}
+# the numbers 1 to 2 refer to different blocks
+
+# Amp S-N raw
+D$AmpSmNno80Hz = rowMeans(cbind(D$AmpSmNno80_1,D$AmpSmNno80_2))
+D$AmpSmNlo80Hz = rowMeans(cbind(D$AmpSmNlo80_1,D$AmpSmNlo80_2))
+D$AmpSmNhi80Hz = rowMeans(cbind(D$AmpSmNhi80_1,D$AmpSmNhi80_2))
+
+# Amp S raw
+D$AmpSno80Hz = rowMeans(cbind(D$AmpSno80_1,D$AmpSno80_2))
+D$AmpSlo80Hz = rowMeans(cbind(D$AmpSlo80_1,D$AmpSlo80_2))
+D$AmpShi80Hz = rowMeans(cbind(D$AmpShi80_1,D$AmpShi80_2))
+
+# Amp N raw
+D$AmpNno80Hz = rowMeans(cbind(D$AmpNno80_1,D$AmpNno80_2))
+D$AmpNlo80Hz = rowMeans(cbind(D$AmpNlo80_1,D$AmpNlo80_2))
+D$AmpNhi80Hz = rowMeans(cbind(D$AmpNhi80_1,D$AmpNhi80_2))
+
+# Amp SNR raw
+D$AmpSNRno80Hz = rowMeans(cbind(D$AmpSNRno80_1,D$AmpSNRno80_2))
+D$AmpSNRlo80Hz = rowMeans(cbind(D$AmpSNRlo80_1,D$AmpSNRlo80_2))
+D$AmpSNRhi80Hz = rowMeans(cbind(D$AmpSNRhi80_1,D$AmpSNRhi80_2))
+```
+
+```{r create EEG ITC variables, echo = rout}
+# the numbers 1 to 2 refer to different blocks
+
+# ITC S-N raw
+D$ItcSmNno80Hz = rowMeans(cbind(D$ItcSmNno80_1,D$ItcSmNno80_2))
+D$ItcSmNlo80Hz = rowMeans(cbind(D$ItcSmNlo80_1,D$ItcSmNlo80_2))
+D$ItcSmNhi80Hz = rowMeans(cbind(D$ItcSmNhi80_1,D$ItcSmNhi80_2))
+
+# ITC S raw
+D$ItcSno80Hz = rowMeans(cbind(D$ItcSno80_1,D$ItcSno80_2))
+D$ItcSlo80Hz = rowMeans(cbind(D$ItcSlo80_1,D$ItcSlo80_2))
+D$ItcShi80Hz = rowMeans(cbind(D$ItcShi80_1,D$ItcShi80_2))
+
+# ITC N raw
+D$ItcNno80Hz = rowMeans(cbind(D$ItcNno80_1,D$ItcNno80_2))
+D$ItcNlo80Hz = rowMeans(cbind(D$ItcNlo80_1,D$ItcNlo80_2))
+D$ItcNhi80Hz = rowMeans(cbind(D$ItcNhi80_1,D$ItcNhi80_2))
+
+# ITC SNR raw
+D$ItcSNRno80Hz = rowMeans(cbind(D$ItcSNRno80_1,D$ItcSNRno80_2))
+D$ItcSNRlo80Hz = rowMeans(cbind(D$ItcSNRlo80_1,D$ItcSNRlo80_2))
+D$ItcSNRhi80Hz = rowMeans(cbind(D$ItcSNRhi80_1,D$ItcSNRhi80_2))
+```
+
+```{r find fp with SmN > 0.1 in any condition, echo = rout}
+Dsel_amp = D %>% filter(
+  D$AmpSmNno80Hz > 0.1 | D$AmpSmNlo80Hz > 0.1 | D$AmpSmNhi80Hz > 0.1
+  )
+
+Dsel2_amp = D %>% filter(
+  D$AmpSmNno80Hz > 0.1 & D$AmpSmNlo80Hz > 0.1 & D$AmpSmNhi80Hz > 0.1
+  )
+
+Dsel_itc = D %>% filter(
+  D$ItcSmNno80Hz > 0.1 | D$ItcSmNlo80Hz > 0.1 | D$ItcSmNhi80Hz > 0.1
+  )
+
+Dsel2_itc = D %>% filter(
+  D$ItcSmNno80Hz > 0.1 & D$ItcSmNlo80Hz > 0.1 & D$ItcSmNhi80Hz > 0.1
+  )
+
+```
+
+## Quick look at SmN for 80-Hz ASSRs:
+**For all subjects:**  
+Amplitude (N = `r nrow(D)`):  
+  No load = `r round(mean(D$AmpSmNno80Hz),3)`  
+  Low load  = `r round(mean(D$AmpSmNlo80Hz),3)`  
+  High load = `r round(mean(D$AmpSmNhi80Hz),3)`  
+  
+ITC (N = `r nrow(D)`):  :  
+  No load = `r round(mean(D$ItcSmNno80Hz),3)`  
+  Low load  = `r round(mean(D$ItcSmNlo80Hz),3)`  
+  High load = `r round(mean(D$ItcSmNhi80Hz),3)`  
+
+**For those who have at least one SmN > 0.1:**  
+Amplitude (N = `r nrow(Dsel_amp)`):  
+  No load = `r round(mean(Dsel_amp$AmpSmNno80Hz),3)`  
+  Low load  = `r round(mean(Dsel_amp$AmpSmNlo80Hz),3)`  
+  High load = `r round(mean(Dsel_amp$AmpSmNhi80Hz),3)`  
+  
+ITC (N = `r nrow(Dsel_itc)`):  :  
+  No load = `r round(mean(Dsel_itc$ItcSmNno80Hz),3)`  
+  Low load  = `r round(mean(Dsel_itc$ItcSmNlo80Hz),3)`  
+  High load = `r round(mean(Dsel_itc$ItcSmNhi80Hz),3)`  
+  
+  
+**For those who have all SmN > 0.1:**  
+Amplitude (N = `r nrow(Dsel2_amp)`):  
+  No load = `r round(mean(Dsel2_amp$AmpSmNno80Hz),3)`  
+  Low load  = `r round(mean(Dsel2_amp$AmpSmNlo80Hz),3)`  
+  High load = `r round(mean(Dsel2_amp$AmpSmNhi80Hz),3)`  
+  
+ITC (N = `r nrow(Dsel2_amp)`):  :  
+  No load = `r round(mean(Dsel2_itc$ItcSmNno80Hz),3)`  
+  Low load  = `r round(mean(Dsel2_itc$ItcSmNlo80Hz),3)`  
+  High load = `r round(mean(Dsel2_itc$ItcSmNhi80Hz),3)`  
+
+## ASSR means and prereg BFs {.tabset}
+Means and preregistered Bayes factors.  
+
+### Ampl SmN {.tabset}
+Amplitude signal minus noise (SmN)  
+
+#### plot
+```{r plot AmpSmN, echo = rout}
+iv = "AmpSmN"
+Dtmp = getdiffs(D, iv = iv)
+myylim = c(min(Dtmp), max(Dtmp)) 
+Dtmp = Dtmp[,c(4:9)]
+Dtmp = cbind(D$fp, Dtmp)
+colnames(Dtmp) = c('fp', 'no', 'low', 'high', 'no-low', 'no-high', 'low-high')
+bp1a = plotoverlay(dm = Dtmp,lbl = paste0("80 Hz"), dvy = "Mean SmN amplitude (µV)", myylim)
+
+Dtmp_sel = getdiffs(Dsel_amp, iv = iv)
+myylim = c(min(Dtmp_sel), max(Dtmp_sel)) 
+Dtmp_sel = Dtmp_sel[,c(4:9)]
+Dtmp_sel = cbind(Dsel_amp$fp, Dtmp_sel)
+colnames(Dtmp_sel) = c('fp', 'no', 'low', 'high', 'no-low', 'no-high', 'low-high')
+bp1b = plotoverlay(dm = Dtmp_sel,lbl = paste0("80 Hz"), dvy = "", myylim)
+
+Dtmp_sel2 = getdiffs(Dsel2_amp, iv = iv)
+myylim = c(min(Dtmp_sel2), max(Dtmp_sel2)) 
+Dtmp_sel2 = Dtmp_sel2[,c(4:9)]
+Dtmp_sel2 = cbind(Dsel2_amp$fp, Dtmp_sel2)
+colnames(Dtmp_sel2) = c('fp', 'no', 'low', 'high', 'no-low', 'no-high', 'low-high')
+bp1c = plotoverlay(dm = Dtmp_sel2,lbl = paste0("80 Hz"), dvy = "", myylim)
+
+
+grid.arrange(bp1a, bp1b, bp1c, ncol = 3)
+bp1 = arrangeGrob(bp1a, bp1b, bp1c, ncol = 3)
+ggsave(file.path(dir_fig,"figure_amp_80Hz_sel.jpg"), bp1, dpi = 600, width = 7, height = 4)
+ggsave(file.path(dir_fig,"figure_amp_80Hz_sel.pdf"), bp1, dpi = 600, width = 7, height = 4)
+
+Dtmp_amp = Dtmp # save for later
+Dtmp_amp_sel = Dtmp_sel # save for later
+Dtmp_amp_sel2 = Dtmp_sel2 # save for later
+
+
+```
+
+#### table
+```{r contrasts for AmpSmN, echo = rout}
+iv = "AmpSmN"
+Dtmp = getdiffs(D, iv = iv)
+Dtmp = tableCIs(Dtmp[,c(4:9)])
+Dtmp = Dtmp[1:4]
+#Dtmp$sample = 'complete'
+
+Dtmp_sel = getdiffs(Dsel_amp, iv = iv)
+Dtmp_sel = tableCIs(Dtmp_sel[,c(4:9)])
+Dtmp_sel = Dtmp_sel[2:4]
+#Dtmp_sel$sample = 'sel any > 0.1'
+
+Dtmp_sel2 = getdiffs(Dsel2_amp, iv = iv)
+Dtmp_sel2 = tableCIs(Dtmp_sel2[,c(4:9)])
+Dtmp_sel2 = Dtmp_sel2[2:4]
+#Dtmp_sel2$sample = 'sel all > 0.1'
+
+Dtmp_all = cbind(Dtmp, Dtmp_sel, Dtmp_sel2)
+
+Dtmp_all %>%
+  kable(digits = 3) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = F, position = 'left') %>%
+  add_header_above(c(" " = 1, "complete (N = 33)" = 3, "any > 0.1 (N = 19)" = 3, "all > 0.1 (N = 7)" = 3))
+
+```
+
+#### preregistered BFs
+The BFs are computed from Bayesian one-sample t tests of difference scores (with Aladins R script).  
+https://doi.org/10.17045/sthlmuni.4981154.v3    
+
+The BF01 uses uniform H1 models with different lower limits (LL) and upper limits (UL).  
+BF01 is the evidence for the null hypothesis relative to the alternative hypothesis.  
+If BF01 > 3, this is evidence for the null. If BF01 < 1/3, this is evidence against the null.   
+
+```{r BFs for AmpSmN, echo = rout}
+Dtmp = contrastBFs(D, iv = iv)
+Dtmp$sample = 'complete'
+
+Dtmp_sel = contrastBFs(Dsel_amp, iv = iv)
+Dtmp_sel$sample = 'any > 0.1'
+
+Dtmp_sel2 = contrastBFs(Dsel2_amp, iv = iv)
+Dtmp_sel2$sample = 'all > 0.1'
+
+Dtmp_all = rbind(Dtmp, Dtmp_sel, Dtmp_sel2)
+
+Dtmp_all %>%
+  kable(digits = 3,
+        col.names = c('Variable','Mean','[-1, +1]','[0, +1]','[0, +0.24]','[0, +0.37]','sample')) %>%
+  add_header_above(c(" " = 2, "BF01" = 4, " " = 1)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = F, position = 'left')
+```
+
+### ITC SmN  {.tabset}
+Intertrial coherence signal minus noise (SmN) 
+
+#### plot
+```{r plot ITCSmN, echo = rout}
+iv = "ItcSmN"
+
+Dtmp = getdiffs(D, iv = iv)
+myylim = c(min(Dtmp), max(Dtmp)) 
+Dtmp = Dtmp[,c(4:9)]
+Dtmp = cbind(D$fp, Dtmp)
+colnames(Dtmp) = c('fp', 'no', 'low', 'high', 'no-low', 'no-high', 'low-high')
+bp1a = plotoverlay(dm = Dtmp,lbl = paste0("80 Hz"), dvy = "Mean SmN ITC (µV)", myylim)
+
+Dtmp_sel = getdiffs(Dsel_itc, iv = iv)
+myylim = c(min(Dtmp_sel), max(Dtmp_sel)) 
+Dtmp_sel = Dtmp_sel[,c(4:9)]
+Dtmp_sel = cbind(Dsel_itc$fp, Dtmp_sel)
+colnames(Dtmp_sel) = c('fp', 'no', 'low', 'high', 'no-low', 'no-high', 'low-high')
+bp1b = plotoverlay(dm = Dtmp_sel,lbl = paste0("80 Hz"), dvy = "", myylim)
+
+Dtmp_sel2 = getdiffs(Dsel2_itc, iv = iv)
+myylim = c(min(Dtmp_sel2), max(Dtmp_sel2)) 
+Dtmp_sel2 = Dtmp_sel2[,c(4:9)]
+Dtmp_sel2 = cbind(Dsel2_itc$fp, Dtmp_sel2)
+colnames(Dtmp_sel2) = c('fp', 'no', 'low', 'high', 'no-low', 'no-high', 'low-high')
+bp1c = plotoverlay(dm = Dtmp_sel2,lbl = paste0("80 Hz"), dvy = "", myylim)
+
+grid.arrange(bp1a, bp1b, bp1c, ncol = 3)
+bp1 = arrangeGrob(bp1a, bp1b, bp1c, ncol = 3)
+ggsave(file.path(dir_fig,"figure_itc_80Hz_sel.jpg"), bp1, dpi = 600, width = 7, height = 4)
+ggsave(file.path(dir_fig,"figure_itc_80Hz_sel.pdf"), bp1, dpi = 600, width = 7, height = 4)
+
+Dtmp_itc = Dtmp # save for later
+Dtmp_itc_sel = Dtmp_sel # save for later
+Dtmp_itc_sel2 = Dtmp_sel2 # save for later
+```
+
+#### table
+```{r contrasts for ITCSmN, echo = rout}
+iv = "ItcSmN"
+Dtmp = getdiffs(D, iv = iv)
+Dtmp = tableCIs(Dtmp[,c(4:9)])
+Dtmp = Dtmp[1:4]
+#Dtmp$sample = 'complete'
+
+Dtmp_sel = getdiffs(Dsel_itc, iv = iv)
+Dtmp_sel = tableCIs(Dtmp_sel[,c(4:9)])
+Dtmp_sel = Dtmp_sel[2:4]
+#Dtmp_sel$sample = 'sel any > 0.1'
+
+Dtmp_sel2 = getdiffs(Dsel2_itc, iv = iv)
+Dtmp_sel2 = tableCIs(Dtmp_sel2[,c(4:9)])
+Dtmp_sel2 = Dtmp_sel2[2:4]
+#Dtmp_sel2$sample = 'sel all > 0.1'
+
+Dtmp_all = cbind(Dtmp, Dtmp_sel, Dtmp_sel2)
+
+Dtmp_all %>%
+  kable(digits = 3) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = F, position = 'left') %>%
+  add_header_above(c(" " = 1, "complete (N = 33)" = 3, "any > 0.1 (N = 20)" = 3, "all > 0.1 (N = 8)" = 3))
+```
+
+#### preregistered BFs
+The BFs are computed from Bayesian one-sample t tests of difference scores (with Aladins R script).  
+https://doi.org/10.17045/sthlmuni.4981154.v3    
+
+The BF01 uses uniform H1 models with different lower limits (LL) and upper limits (UL).  
+BF01 is the evidence for the null hypothesis relative to the alternative hypothesis.  
+If BF01 > 3, this is evidence for the null. If BF01 < 1/3, this is evidence against the null.   
+```{r BFs for ITCSmN, echo = rout}
+Dtmp = contrastBFs(D, iv = iv)
+Dtmp$sample = 'complete'
+
+Dtmp_sel = contrastBFs(Dsel_itc, iv = iv)
+Dtmp_sel$sample = 'any > 0.1'
+
+Dtmp_sel2 = contrastBFs(Dsel2_itc, iv = iv)
+Dtmp_sel2$sample = 'all > 0.1'
+
+Dtmp_all = rbind(Dtmp, Dtmp_sel, Dtmp_sel2)
+
+Dtmp_all %>%
+  kable(digits = 3,
+        col.names = c('Variable','Mean','[-1, +1]','[0, +1]','[0, +0.24]','[0, +0.37]','sample')) %>%
+  add_header_above(c(" " = 2, "BF01" = 4, " " = 1)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = F, position = 'left')
+```
+
+## Exploratory BFs {.tabset}
+In the preregistered BF analyses, we defined upper limits of the priors on the basis of the mean SmN values for no load in a previous study with 40-Hz ASSRs (Study 2 in Szychowska & Wiens, 2020). Theoretically, the SmN during no load defines an upper limit of how strong the task effect and load effect can be.  
+
+Because the visual task in the present study was identical to that in the previous study, we anticipated that we would observe similar mean SmN values during no load for 40-Hz. So, we used our previous data to predict the upper limits for 40 Hz. For simplicity, we used these upper limits also for 20 and 80 Hz. Thus, the original goal was to define realistic upper limits in the BF analyses and to preregister these limits to facilitate confirmatory research (hypothesis testing).  
+
+However, the present results showed that the **actual** SmN during no and low load differed from the preregistered upper limits. To conduct BF analyses that matched our original goal of using reasonable upper limits, we defined the upper limits on the basis of the present data, separately for each measure and frequency.    
+
+**No minus low/high**  
+  One analysis considered **no load** as the baseline, and the H1 model was defined as a uniform distribution between 0 (as lower limit, LL) and the present mean of no load (as upper limit, UL).  
+
+No minus low = task effect  
+No minus high = combined effect of task and load  
+
+**Low minus high**  
+  The other analysis considered **low load** as the baseline, and the H1 model was defined as a uniform distribution between 0 (as lower limit, LL) and the present mean of low load (as upper limit, UL).  
+
+Low minus high = load effect  
+
+In the table, LL and UL refer to the 95% CIs of the means (and not to the LL and UL of the H1 models).  
+
+```{r select data, echo = rout}
+# complete sample
+Dtmpa = subset(Dtmp_amp, 
+               select=c(fp, no, low, high))
+colnames(Dtmpa) = c('fp', 'AmpSmNno', 'AmpSmNlo', 'AmpSmNhi')
+Dtmpi = subset(Dtmp_itc, 
+               select=c(no, low, high))
+colnames(Dtmpi) = c('ItcSmNno', 'ItcSmNlo', 'ItcSmNhi')
+Dtmp = cbind(Dtmpa, Dtmpi)
+Dtmp$sample = 'complete'
+Dtmpi$sample = 'complete'
+Dtmpa$sample = 'complete'
+
+# any > 0.1
+Dtmpa_sel = subset(Dtmp_amp_sel, 
+               select=c(fp, no, low, high))
+colnames(Dtmpa_sel) = c('fp', 'AmpSmNno', 'AmpSmNlo', 'AmpSmNhi')
+Dtmpi_sel = subset(Dtmp_itc_sel, 
+               select=c(fp, no, low, high))
+colnames(Dtmpi_sel) = c('fp','ItcSmNno', 'ItcSmNlo', 'ItcSmNhi')
+#Dtmp_sel = cbind(Dtmpa_sel, Dtmpi_sel)
+Dtmpi_sel$sample = 'any > 0.1'
+Dtmpa_sel$sample = 'any > 0.1'
+
+# all > 0.1
+Dtmpa_sel2 = subset(Dtmp_amp_sel2, 
+               select=c(fp, no, low, high))
+colnames(Dtmpa_sel2) = c('fp', 'AmpSmNno', 'AmpSmNlo', 'AmpSmNhi')
+Dtmpi_sel2 = subset(Dtmp_itc_sel2, 
+               select=c(fp, no, low, high))
+colnames(Dtmpi_sel2) = c('fp','ItcSmNno', 'ItcSmNlo', 'ItcSmNhi')
+#Dtmp_sel2 = cbind(Dtmpa_sel2, Dtmpi_sel2)
+Dtmpi_sel2$sample = 'all > 0.1'
+Dtmpa_sel2$sample = 'all > 0.1'
+```
+
+### load effect: low minus high
+High load is used as the upper limit of the H1 model.  
+H1 model:  
+LL = 0  
+UL = low load  
+In the table, LL and UL refer to the 95% CIs of the means (and not to the LL and UL of the H1 models).
+```{r Study V data hiMlo, echo = rout}
+DBF10 = numeric()
+
+# create matrix with measure, study, n, mean high load, 
+# diff hiMlo, LL 95%CI, UL 95%CI, BF10 hiMlo, BF01 hiMlo,
+LL = 0
+
+# amp
+# complete
+UL = mean(Dtmp$AmpSmNlo)
+tmp = Dtmp$AmpSmNlo-Dtmp$AmpSmNhi
+DBF10 = rbind(DBF10, c('complete','Amp', nrow(Dtmp), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# any > 0.1
+UL = mean(Dtmpa_sel$AmpSmNlo)
+tmp = Dtmpa_sel$AmpSmNlo-Dtmpa_sel$AmpSmNhi
+DBF10 = rbind(DBF10, c('any > 0.1','Amp', nrow(Dtmpa_sel), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# all > 0.1
+UL = mean(Dtmpa_sel2$AmpSmNlo)
+tmp = Dtmpa_sel2$AmpSmNlo-Dtmpa_sel2$AmpSmNhi
+DBF10 = rbind(DBF10, c('all > 0.1', 'Amp', nrow(Dtmpa_sel2), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# itc
+# complete
+UL = mean(Dtmp$ItcSmNlo)
+tmp = Dtmp$ItcSmNlo-Dtmp$ItcSmNhi
+DBF10 = rbind(DBF10, c('complete','Itc', nrow(Dtmp), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# any > 0.1
+UL = mean(Dtmpi_sel$ItcSmNlo)
+tmp = Dtmpi_sel$ItcSmNlo-Dtmpi_sel$ItcSmNhi
+DBF10 = rbind(DBF10, c('any > 0.1','Itc', nrow(Dtmpi_sel), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# all > 0.1
+UL = mean(Dtmpi_sel2$ItcSmNlo)
+tmp = Dtmpi_sel2$ItcSmNlo-Dtmpi_sel2$ItcSmNhi
+DBF10 = rbind(DBF10, c('all > 0.1', 'Itc', nrow(Dtmpi_sel2), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+DBF10 = as.data.frame(DBF10)
+colnames(DBF10)=c('Sample','Measure','N','Mhi',
+                  'M-loMhi','LL-loMhi','UL-loMhi','BF10-loMhi','BF01-loMhi')
+
+# convert character to numeric
+i = 3:9
+DBF10[, i] = apply(DBF10[,i],2, function(x) as.numeric(as.character(x)))
+DBF10 %>%
+  kable(digits = 3,
+        col.names = c('Sample','Measure','N','Mean',
+                      'Mean','LL', 'UL', 'BF10', 'BF01')) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = F, position = 'left') %>%
+  add_header_above(c(" " = 3, "low" = 1, "low minus high" = 5))
+```
+
+### task effect: no minus low
+Low load is used as the upper limit of the H1 model.  
+H1 model:  
+LL = 0  
+UL = no load  
+In the table, LL and UL refer to the 95% CIs of the means (and not to the LL and UL of the H1 models).  
+```{r Study V data loMno, echo = rout}
+# compare low with no load
+DBF10 = numeric()
+
+# create matrix with measure, study, n, mean low load, 
+# diff loMhi, LL 95%CI, UL 95%CI, BF01 loMhi
+LL = 0
+
+# amp
+# complete
+UL = mean(Dtmp$AmpSmNno)
+tmp = Dtmp$AmpSmNno-Dtmp$AmpSmNlo
+DBF10 = rbind(DBF10, c('complete','Amp', nrow(Dtmp), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# any > 0.1
+UL = mean(Dtmpa_sel$AmpSmNno)
+tmp = Dtmpa_sel$AmpSmNno-Dtmpa_sel$AmpSmNlo
+DBF10 = rbind(DBF10, c('any > 0.1','Amp', nrow(Dtmpa_sel), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# all > 0.1
+UL = mean(Dtmpa_sel2$AmpSmNno)
+tmp = Dtmpa_sel2$AmpSmNno-Dtmpa_sel2$AmpSmNlo
+DBF10 = rbind(DBF10, c('all > 0.1', 'Amp', nrow(Dtmpa_sel2), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# itc
+# complete
+UL = mean(Dtmp$ItcSmNno)
+tmp = Dtmp$ItcSmNno-Dtmp$ItcSmNlo
+DBF10 = rbind(DBF10, c('complete','Itc', nrow(Dtmp), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# any > 0.1
+UL = mean(Dtmpi_sel$ItcSmNno)
+tmp = Dtmpi_sel$ItcSmNno-Dtmpi_sel$ItcSmNlo
+DBF10 = rbind(DBF10, c('any > 0.1','Itc', nrow(Dtmpi_sel), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# all > 0.1
+UL = mean(Dtmpi_sel2$ItcSmNno)
+tmp = Dtmpi_sel2$ItcSmNno-Dtmpi_sel2$ItcSmNlo
+DBF10 = rbind(DBF10, c('all > 0.1', 'Itc', nrow(Dtmpi_sel2), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+DBF10 = as.data.frame(DBF10)
+colnames(DBF10)=c('Sample','Measure','N','Mhi',
+                  'M-loMhi','LL-loMhi','UL-loMhi','BF10-loMhi','BF01-loMhi')
+
+# convert character to numeric
+i = 3:9
+DBF10[, i] = apply(DBF10[,i],2, function(x) as.numeric(as.character(x)))
+DBF10 %>%
+  kable(digits = 3,
+        col.names = c('Sample','Measure','N','Mean',
+                      'Mean','LL', 'UL', 'BF10', 'BF01')) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = F, position = 'left') %>%
+  add_header_above(c(" " = 3, "no" = 1, "no minus low" = 5))
+```
+### combined effect: no minus high
+High load is used as the upper limit of the H1 model.  
+H1 model:  
+LL = 0  
+UL = no load  
+
+In the table, LL and UL refer to the 95% CIs of the means (and not to the LL and UL of the H1 models).
+```{r Study V data hiMno, echo = rout}
+
+DBF10 = numeric()
+
+# create matrix with measure, study, n, mean no load, 
+# diff hiMno, LL 95%CI, UL 95%CI, BF10 hiMno, BF01 hiMno,
+# diff hiMlo, LL 95%CI, UL 95%CI, BF10 hiMlo, BF01 hiMlo,
+LL = 0
+
+# amp
+# complete
+UL = mean(Dtmp$AmpSmNno)
+tmp = Dtmp$AmpSmNno-Dtmp$AmpSmNhi
+DBF10 = rbind(DBF10, c('complete','Amp', nrow(Dtmp), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# any > 0.1
+UL = mean(Dtmpa_sel$AmpSmNno)
+tmp = Dtmpa_sel$AmpSmNno-Dtmpa_sel$AmpSmNhi
+DBF10 = rbind(DBF10, c('any > 0.1','Amp', nrow(Dtmpa_sel), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# all > 0.1
+UL = mean(Dtmpa_sel2$AmpSmNno)
+tmp = Dtmpa_sel2$AmpSmNno-Dtmpa_sel2$AmpSmNhi
+DBF10 = rbind(DBF10, c('all > 0.1', 'Amp', nrow(Dtmpa_sel2), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# itc
+# complete
+UL = mean(Dtmp$ItcSmNno)
+tmp = Dtmp$ItcSmNno-Dtmp$ItcSmNhi
+DBF10 = rbind(DBF10, c('complete','Itc', nrow(Dtmp), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# any > 0.1
+UL = mean(Dtmpi_sel$ItcSmNno)
+tmp = Dtmpi_sel$ItcSmNno-Dtmpi_sel$ItcSmNhi
+DBF10 = rbind(DBF10, c('any > 0.1','Itc', nrow(Dtmpi_sel), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# all > 0.1
+UL = mean(Dtmpi_sel2$ItcSmNno)
+tmp = Dtmpi_sel2$ItcSmNno-Dtmpi_sel2$ItcSmNhi
+DBF10 = rbind(DBF10, c('all > 0.1', 'Itc', nrow(Dtmpi_sel2), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+DBF10 = as.data.frame(DBF10)
+colnames(DBF10)=c('Sample','Measure','N','Mhi',
+                  'M-loMhi','LL-loMhi','UL-loMhi','BF10-loMhi','BF01-loMhi')
+
+# convert character to numeric
+i = 3:9
+DBF10[, i] = apply(DBF10[,i],2, function(x) as.numeric(as.character(x)))
+DBF10 %>%
+  kable(digits = 3,
+        col.names = c('Sample','Measure','N','Mean',
+                      'Mean','LL', 'UL', 'BF10', 'BF01')) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = F, position = 'left') %>%
+  add_header_above(c(" " = 3, "no" = 1, "no minus high" = 5))
+```

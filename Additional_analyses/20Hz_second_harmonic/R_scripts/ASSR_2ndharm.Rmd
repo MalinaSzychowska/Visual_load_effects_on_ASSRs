@@ -1,0 +1,1065 @@
+---
+title: "ASSR_2ndharm"
+author: "Stefan Wiens & Malina Szychowska"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    df_print: paged
+    highlight: tango
+    theme: united
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+
+---
+<style>
+body {text-align: justify}
+</style>
+
+```{r setup, include = FALSE}
+#'echo = False' hides *all* code chunks below when knitted 
+#'warning = F' hides *all* warnings messages below when knitted 
+#'message = F' hides *all* messages below when knitted 
+
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+knitr::opts_chunk$set(fig.width=12, fig.asp=0.6, fig.align="center")
+```
+
+```{r prepare R, echo = FALSE, include = FALSE}
+# clear memory and set random seed
+rm(list = ls()) # clear memory
+graphics.off()  # clear all plots
+cat("\014")     # clear console (same as Ctrl-L in console)
+set.seed(123)   # Makes it reproducable also if random number generators are used
+
+# set up working directory
+experiment = 'ASSR2'
+
+## Stefan
+#dir_main = file.path('C:','Users',Sys.getenv("USERNAME"),'Documents','Box Sync',experiment)
+
+# Malina
+dir_main = file.path('C:','Users',Sys.getenv("USERNAME"),'Box Sync','Malina_dissertation', 'additional analyses for the defense', '20Hz second harm')
+
+# knit in R directory
+knitr::opts_knit$set(file.path(dir_main,'R_scripts'))
+
+source('ASSR_2ndharm_set_up.r')
+
+# save output data files to result directory
+dir_res = file.path(dir_main,'results')
+
+# save figures to an extra directory
+dir_fig = file.path(dir_res, 'figures')
+
+# define if extra output should be printed
+rout = TRUE
+
+# change to working directory (not necessary)
+# setwd(file.path(dir_main,'R_scripts'))
+```
+
+```{r read in audio EEG data, echo = rout}
+DSIV_s1=read.csv(file.path(dir_res, paste0("data_audio_signal_noise_ASSR_study1_2nd_harmonic.tsv")), sep="\t",header=TRUE, dec=".")
+DSIV_s2=read.csv(file.path(dir_res, paste0("data_audio_signal_noise_ASSR_study2_2nd_harmonic.tsv")), sep="\t",header=TRUE, dec=".")
+DSV=read.csv(file.path(dir_res, paste0("data_audio_signal_noise_ASSR2_2nd_harmonic.tsv")), sep="\t",header=TRUE, dec=".")
+```
+
+```{r check for unique subject numbers, echo = rout}
+if (any(as.numeric(table(DSIV_s1$fp))!=1)){
+  stop("Subject numbers are not unique!")
+}
+
+if (any(as.numeric(table(DSIV_s2$fp))!=1)){
+  stop("Subject numbers are not unique!")
+}
+
+if (any(as.numeric(table(DSV$fp))!=1)){
+  stop("Subject numbers are not unique!")
+  }
+```
+
+```{r create EEG amp variables, echo = rout}
+# Amp S-N raw
+
+# ASSR Study 1
+# the numbers 1 to 4 refer to different blocks
+
+DSIV_s1$AmpSmNlo = rowMeans(cbind(DSIV_s1$AmpSmNlo1,DSIV_s1$AmpSmNlo2,DSIV_s1$AmpSmNlo3,DSIV_s1$AmpSmNlo4))
+DSIV_s1$AmpSmNhi = rowMeans(cbind(DSIV_s1$AmpSmNhi1,DSIV_s1$AmpSmNhi2,DSIV_s1$AmpSmNhi3,DSIV_s1$AmpSmNhi4))
+
+# ASSR Study 2
+# the numbers 1 to 4 refer to different blocks
+DSIV_s2$AmpSmNno = rowMeans(cbind(DSIV_s2$AmpSmNno1,DSIV_s2$AmpSmNno2,DSIV_s2$AmpSmNno3,DSIV_s2$AmpSmNno4))
+DSIV_s2$AmpSmNlo = rowMeans(cbind(DSIV_s2$AmpSmNlo1,DSIV_s2$AmpSmNlo2,DSIV_s2$AmpSmNlo3,DSIV_s2$AmpSmNlo4))
+DSIV_s2$AmpSmNhi = rowMeans(cbind(DSIV_s2$AmpSmNhi1,DSIV_s2$AmpSmNhi2,DSIV_s2$AmpSmNhi3,DSIV_s2$AmpSmNhi4))
+DSIV_s2$AmpSmNvh = rowMeans(cbind(DSIV_s2$AmpSmNvh1,DSIV_s2$AmpSmNvh2,DSIV_s2$AmpSmNvh3,DSIV_s2$AmpSmNvh4))
+
+# ASSR2
+# the numbers 1 to 2 refer to different blocks
+DSV$AmpSmNno20Hz = rowMeans(cbind(DSV$AmpSmNno20_1,DSV$AmpSmNno20_2))
+DSV$AmpSmNno40Hz = rowMeans(cbind(DSV$AmpSmNno40_1,DSV$AmpSmNno40_2))
+DSV$AmpSmNno80Hz = rowMeans(cbind(DSV$AmpSmNno80_1,DSV$AmpSmNno80_2))
+DSV$AmpSmNlo20Hz = rowMeans(cbind(DSV$AmpSmNlo20_1,DSV$AmpSmNlo20_2))
+DSV$AmpSmNlo40Hz = rowMeans(cbind(DSV$AmpSmNlo40_1,DSV$AmpSmNlo40_2))
+DSV$AmpSmNlo80Hz = rowMeans(cbind(DSV$AmpSmNlo80_1,DSV$AmpSmNlo80_2))
+DSV$AmpSmNhi20Hz = rowMeans(cbind(DSV$AmpSmNhi20_1,DSV$AmpSmNhi20_2))
+DSV$AmpSmNhi40Hz = rowMeans(cbind(DSV$AmpSmNhi40_1,DSV$AmpSmNhi40_2))
+DSV$AmpSmNhi80Hz = rowMeans(cbind(DSV$AmpSmNhi80_1,DSV$AmpSmNhi80_2))
+
+# 
+# # Amp S raw
+# D$AmpSno20Hz = rowMeans(cbind(D$AmpSno20_1,D$AmpSno20_2))
+# D$AmpSno40Hz = rowMeans(cbind(D$AmpSno40_1,D$AmpSno40_2))
+# D$AmpSno80Hz = rowMeans(cbind(D$AmpSno80_1,D$AmpSno80_2))
+# D$AmpSlo20Hz = rowMeans(cbind(D$AmpSlo20_1,D$AmpSlo20_2))
+# D$AmpSlo40Hz = rowMeans(cbind(D$AmpSlo40_1,D$AmpSlo40_2))
+# D$AmpSlo80Hz = rowMeans(cbind(D$AmpSlo80_1,D$AmpSlo80_2))
+# D$AmpShi20Hz = rowMeans(cbind(D$AmpShi20_1,D$AmpShi20_2))
+# D$AmpShi40Hz = rowMeans(cbind(D$AmpShi40_1,D$AmpShi40_2))
+# D$AmpShi80Hz = rowMeans(cbind(D$AmpShi80_1,D$AmpShi80_2))
+# 
+# # Amp N raw
+# D$AmpNno20Hz = rowMeans(cbind(D$AmpNno20_1,D$AmpNno20_2))
+# D$AmpNno40Hz = rowMeans(cbind(D$AmpNno40_1,D$AmpNno40_2))
+# D$AmpNno80Hz = rowMeans(cbind(D$AmpNno80_1,D$AmpNno80_2))
+# D$AmpNlo20Hz = rowMeans(cbind(D$AmpNlo20_1,D$AmpNlo20_2))
+# D$AmpNlo40Hz = rowMeans(cbind(D$AmpNlo40_1,D$AmpNlo40_2))
+# D$AmpNlo80Hz = rowMeans(cbind(D$AmpNlo80_1,D$AmpNlo80_2))
+# D$AmpNhi20Hz = rowMeans(cbind(D$AmpNhi20_1,D$AmpNhi20_2))
+# D$AmpNhi40Hz = rowMeans(cbind(D$AmpNhi40_1,D$AmpNhi40_2))
+# D$AmpNhi80Hz = rowMeans(cbind(D$AmpNhi80_1,D$AmpNhi80_2))
+# 
+# # Amp SNR raw
+# D$AmpSNRno20Hz = rowMeans(cbind(D$AmpSNRno20_1,D$AmpSNRno20_2))
+# D$AmpSNRno40Hz = rowMeans(cbind(D$AmpSNRno40_1,D$AmpSNRno40_2))
+# D$AmpSNRno80Hz = rowMeans(cbind(D$AmpSNRno80_1,D$AmpSNRno80_2))
+# D$AmpSNRlo20Hz = rowMeans(cbind(D$AmpSNRlo20_1,D$AmpSNRlo20_2))
+# D$AmpSNRlo40Hz = rowMeans(cbind(D$AmpSNRlo40_1,D$AmpSNRlo40_2))
+# D$AmpSNRlo80Hz = rowMeans(cbind(D$AmpSNRlo80_1,D$AmpSNRlo80_2))
+# D$AmpSNRhi20Hz = rowMeans(cbind(D$AmpSNRhi20_1,D$AmpSNRhi20_2))
+# D$AmpSNRhi40Hz = rowMeans(cbind(D$AmpSNRhi40_1,D$AmpSNRhi40_2))
+# D$AmpSNRhi80Hz = rowMeans(cbind(D$AmpSNRhi80_1,D$AmpSNRhi80_2))
+```
+
+```{r create EEG ITC variables, echo = rout}
+# ITC S-N raw
+
+# ASSR Study 1
+# the numbers 1 to 4 refer to different blocks
+
+DSIV_s1$ItcSmNlo = rowMeans(cbind(DSIV_s1$ItcSmNlo1,DSIV_s1$ItcSmNlo2,DSIV_s1$ItcSmNlo3,DSIV_s1$ItcSmNlo4))
+DSIV_s1$ItcSmNhi = rowMeans(cbind(DSIV_s1$ItcSmNhi1,DSIV_s1$ItcSmNhi2,DSIV_s1$ItcSmNhi3,DSIV_s1$ItcSmNhi4))
+
+# ASSR Study 2
+# the numbers 1 to 4 refer to different blocks
+DSIV_s2$ItcSmNno = rowMeans(cbind(DSIV_s2$ItcSmNno1,DSIV_s2$ItcSmNno2,DSIV_s2$ItcSmNno3,DSIV_s2$ItcSmNno4))
+DSIV_s2$ItcSmNlo = rowMeans(cbind(DSIV_s2$ItcSmNlo1,DSIV_s2$ItcSmNlo2,DSIV_s2$ItcSmNlo3,DSIV_s2$ItcSmNlo4))
+DSIV_s2$ItcSmNhi = rowMeans(cbind(DSIV_s2$ItcSmNhi1,DSIV_s2$ItcSmNhi2,DSIV_s2$ItcSmNhi3,DSIV_s2$ItcSmNhi4))
+DSIV_s2$ItcSmNvh = rowMeans(cbind(DSIV_s2$ItcSmNvh1,DSIV_s2$ItcSmNvh2,DSIV_s2$ItcSmNvh3,DSIV_s2$ItcSmNvh4))
+
+# ASSR2
+# the numbers 1 to 2 refer to different blocks
+DSV$ItcSmNno20Hz = rowMeans(cbind(DSV$ItcSmNno20_1,DSV$ItcSmNno20_2))
+DSV$ItcSmNno40Hz = rowMeans(cbind(DSV$ItcSmNno40_1,DSV$ItcSmNno40_2))
+DSV$ItcSmNno80Hz = rowMeans(cbind(DSV$ItcSmNno80_1,DSV$ItcSmNno80_2))
+DSV$ItcSmNlo20Hz = rowMeans(cbind(DSV$ItcSmNlo20_1,DSV$ItcSmNlo20_2))
+DSV$ItcSmNlo40Hz = rowMeans(cbind(DSV$ItcSmNlo40_1,DSV$ItcSmNlo40_2))
+DSV$ItcSmNlo80Hz = rowMeans(cbind(DSV$ItcSmNlo80_1,DSV$ItcSmNlo80_2))
+DSV$ItcSmNhi20Hz = rowMeans(cbind(DSV$ItcSmNhi20_1,DSV$ItcSmNhi20_2))
+DSV$ItcSmNhi40Hz = rowMeans(cbind(DSV$ItcSmNhi40_1,DSV$ItcSmNhi40_2))
+DSV$ItcSmNhi80Hz = rowMeans(cbind(DSV$ItcSmNhi80_1,DSV$ItcSmNhi80_2))
+
+
+# # the numbers 1 to 2 refer to different blocks
+# 
+# # ITC S-N raw
+# D$ItcSmNno20Hz = rowMeans(cbind(D$ItcSmNno20_1,D$ItcSmNno20_2))
+# D$ItcSmNno40Hz = rowMeans(cbind(D$ItcSmNno40_1,D$ItcSmNno40_2))
+# D$ItcSmNno80Hz = rowMeans(cbind(D$ItcSmNno80_1,D$ItcSmNno80_2))
+# D$ItcSmNlo20Hz = rowMeans(cbind(D$ItcSmNlo20_1,D$ItcSmNlo20_2))
+# D$ItcSmNlo40Hz = rowMeans(cbind(D$ItcSmNlo40_1,D$ItcSmNlo40_2))
+# D$ItcSmNlo80Hz = rowMeans(cbind(D$ItcSmNlo80_1,D$ItcSmNlo80_2))
+# D$ItcSmNhi20Hz = rowMeans(cbind(D$ItcSmNhi20_1,D$ItcSmNhi20_2))
+# D$ItcSmNhi40Hz = rowMeans(cbind(D$ItcSmNhi40_1,D$ItcSmNhi40_2))
+# D$ItcSmNhi80Hz = rowMeans(cbind(D$ItcSmNhi80_1,D$ItcSmNhi80_2))
+# 
+# # ITC S raw
+# D$ItcSno20Hz = rowMeans(cbind(D$ItcSno20_1,D$ItcSno20_2))
+# D$ItcSno40Hz = rowMeans(cbind(D$ItcSno40_1,D$ItcSno40_2))
+# D$ItcSno80Hz = rowMeans(cbind(D$ItcSno80_1,D$ItcSno80_2))
+# D$ItcSlo20Hz = rowMeans(cbind(D$ItcSlo20_1,D$ItcSlo20_2))
+# D$ItcSlo40Hz = rowMeans(cbind(D$ItcSlo40_1,D$ItcSlo40_2))
+# D$ItcSlo80Hz = rowMeans(cbind(D$ItcSlo80_1,D$ItcSlo80_2))
+# D$ItcShi20Hz = rowMeans(cbind(D$ItcShi20_1,D$ItcShi20_2))
+# D$ItcShi40Hz = rowMeans(cbind(D$ItcShi40_1,D$ItcShi40_2))
+# D$ItcShi80Hz = rowMeans(cbind(D$ItcShi80_1,D$ItcShi80_2))
+# 
+# # ITC N raw
+# D$ItcNno20Hz = rowMeans(cbind(D$ItcNno20_1,D$ItcNno20_2))
+# D$ItcNno40Hz = rowMeans(cbind(D$ItcNno40_1,D$ItcNno40_2))
+# D$ItcNno80Hz = rowMeans(cbind(D$ItcNno80_1,D$ItcNno80_2))
+# D$ItcNlo20Hz = rowMeans(cbind(D$ItcNlo20_1,D$ItcNlo20_2))
+# D$ItcNlo40Hz = rowMeans(cbind(D$ItcNlo40_1,D$ItcNlo40_2))
+# D$ItcNlo80Hz = rowMeans(cbind(D$ItcNlo80_1,D$ItcNlo80_2))
+# D$ItcNhi20Hz = rowMeans(cbind(D$ItcNhi20_1,D$ItcNhi20_2))
+# D$ItcNhi40Hz = rowMeans(cbind(D$ItcNhi40_1,D$ItcNhi40_2))
+# D$ItcNhi80Hz = rowMeans(cbind(D$ItcNhi80_1,D$ItcNhi80_2))
+# 
+# # ITC SNR raw
+# D$ItcSNRno20Hz = rowMeans(cbind(D$ItcSNRno20_1,D$ItcSNRno20_2))
+# D$ItcSNRno40Hz = rowMeans(cbind(D$ItcSNRno40_1,D$ItcSNRno40_2))
+# D$ItcSNRno80Hz = rowMeans(cbind(D$ItcSNRno80_1,D$ItcSNRno80_2))
+# D$ItcSNRlo20Hz = rowMeans(cbind(D$ItcSNRlo20_1,D$ItcSNRlo20_2))
+# D$ItcSNRlo40Hz = rowMeans(cbind(D$ItcSNRlo40_1,D$ItcSNRlo40_2))
+# D$ItcSNRlo80Hz = rowMeans(cbind(D$ItcSNRlo80_1,D$ItcSNRlo80_2))
+# D$ItcSNRhi20Hz = rowMeans(cbind(D$ItcSNRhi20_1,D$ItcSNRhi20_2))
+# D$ItcSNRhi40Hz = rowMeans(cbind(D$ItcSNRhi40_1,D$ItcSNRhi40_2))
+# D$ItcSNRhi80Hz = rowMeans(cbind(D$ItcSNRhi80_1,D$ItcSNRhi80_2))
+```
+
+## Means and 95% CIs {.tabset}
+Plots and tables for each study.  
+Study IV s1 tested 40-Hz ASSRs in low and high load  
+Study IV s2 tested 40-Hz ASSRs in no, low, and high load  
+Study V tested 20-, 40-, and 80-Hz ASSRs in no, low and high load  
+
+### Study IV s1: 40-Hz ASSRs {.tabset}
+Activity at 80 Hz (second harmonic) for 40-Hz ASSRs
+
+#### Ampl SmN {.tabset}
+Amplitude signal minus noise (SmN)  
+
+##### plot
+```{r plot AmpSmN SIV_s1, echo = rout}
+iv = "AmpSmN"
+
+Dtmp = getdiffs_SIV_s1(DSIV_s1, iv = iv)
+myylim = c(-0.1, 0.1)#max(Dtmp)) 
+Dtmp = Dtmp[,c(3:5)]#[,c(10:27)]
+Dtmp = cbind(DSIV_s1$fp, Dtmp)
+colnames(Dtmp)[1] =  c('fp', 'low', 'high', 'low-high')
+
+bp1a = plotoverlay(dm = Dtmp,lbl = paste0("ASSR study 1"), dvy = "Mean SmN amplitude (µV)", myylim)
+
+grid.arrange(bp1a, ncol = 3)
+
+ggsave(file.path(dir_fig,"figure_amp_2ndharm_ASSRStudy1.jpg"), bp1a , dpi = 600, width = 3, height = 4)
+ggsave(file.path(dir_fig,"figure_amp_2ndharm_ASSRStudy1.pdf"), bp1a , dpi = 600, width = 3, height = 4)
+
+Dtmp_amp = Dtmp # save for later
+```
+##### table
+```{r contrasts AmpSmN SIV_s1, echo = rout}
+iv = "AmpSmN"
+Dtmp = getdiffs_SIV_s1(DSIV_s1, iv = iv)
+Dtmp = tableCIs(Dtmp[,-c(1:2)])
+Dtmp %>%
+  kable(digits = 3, caption = "Study IV s1") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = F, position = 'left')
+```
+
+
+#### ITC SmN  {.tabset}
+Intertrial coherence signal minus noise (SmN) 
+
+##### plot
+```{r plot ITCSmN SIV_s1, echo = rout}
+iv = "ItcSmN"
+Dtmp = getdiffs_SIV_s1(DSIV_s1, iv = iv)
+myylim = c(-0.3, 0.3)#max(Dtmp)) 
+Dtmp = Dtmp[,c(3:5)]#[,c(10:27)]
+Dtmp = cbind(DSIV_s1$fp, Dtmp)
+colnames(Dtmp)[1] =  c('fp', 'low', 'high', 'low-high')
+
+bp1a = plotoverlay(dm = Dtmp,lbl = paste0("ASSR study 1"), dvy = "Mean SmN ITC", myylim)
+grid.arrange(bp1a, ncol = 3)
+
+ggsave(file.path(dir_fig,"figure_itc_2ndharm_ASSRStudy1.jpg"), bp1a, dpi = 600, width = 3, height = 4)
+ggsave(file.path(dir_fig,"figure_itc_2ndharm_ASSRStudy1.pdf"), bp1a, dpi = 600, width = 3, height = 4)
+
+Dtmp_itc = Dtmp # save for later
+```
+
+##### table
+```{r contrasts ITCSmN SIV_s1, echo = rout}
+Dtmp = getdiffs_SIV_s1(DSIV_s1, iv = iv)
+Dtmp = tableCIs(Dtmp[,-c(1:2)])
+Dtmp %>%
+  kable(digits = 3, caption = "Study IV s1") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = F, position = 'left')
+```
+
+### Study IV s2: 40-Hz ASSRs {.tabset}
+Activity at 80 Hz (second harmonic) for 40-Hz ASSRs
+
+#### Ampl SmN {.tabset}
+Amplitude signal minus noise (SmN)  
+
+##### plot
+```{r plot AmpSmN SIV_s2, echo = rout}
+iv = "AmpSmN"
+Dtmp2 = getdiffs_SIV_s2(DSIV_s2, iv = iv)
+myylim = c(-0.1, 0.1)#max(Dtmp2)) 
+Dtmp2 = Dtmp2[,c(4:9)]#[,c(10:27)]
+Dtmp2 = cbind(DSIV_s2$fp, Dtmp2)
+colnames(Dtmp2)[1] =  c('fp', 'no', 'low', 'high', 'no-low','no-high','low-high')
+
+bp1b = plotoverlay(dm = Dtmp2,lbl = paste0("ASSR study 2"), dvy = "Mean SmN amplitude (µV)", myylim)
+grid.arrange(bp1b, ncol = 3)
+
+ggsave(file.path(dir_fig,"figure_amp_2ndharm_ASSRStudy2.jpg"), bp1b, dpi = 600, width = 3, height = 4)
+ggsave(file.path(dir_fig,"figure_amp_2ndharm_ASSRStudy2.pdf"), bp1b, dpi = 600, width = 3, height = 4)
+
+Dtmp2_amp = Dtmp2 # save for later
+```
+
+##### table
+```{r contrasts AmpSmN SIV_s2, echo = rout}
+iv = "AmpSmN"
+Dtmp2 = getdiffs_SIV_s2(DSIV_s2, iv = iv)
+Dtmp2 = tableCIs(Dtmp2[,-c(1:3)])
+Dtmp2 %>%
+  kable(digits = 3, caption = "Study IV s2") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = F, position = 'left')
+```
+
+#### ITC SmN  {.tabset}
+Intertrial coherence signal minus noise (SmN) 
+
+##### plot
+```{r plot ITCSmN SIV_s2, echo = rout}
+iv = "ItcSmN"
+Dtmp2 = getdiffs_SIV_s2(DSIV_s2, iv = iv)
+myylim = c(-0.3, 0.3)#max(Dtmp2)) 
+Dtmp2 = Dtmp2[,c(4:9)]#[,c(10:27)]
+Dtmp2 = cbind(DSIV_s2$fp, Dtmp2)
+colnames(Dtmp2)[1] =  c('fp', 'no', 'low', 'high', 'no-low','no-high','low-high')
+
+bp1b = plotoverlay(dm = Dtmp2,lbl = paste0("ASSR study 2"), dvy = "Mean SmN ITC", myylim)
+grid.arrange(bp1b, ncol = 3)
+
+ggsave(file.path(dir_fig,"figure_itc_2ndharm_ASSRStudy2.jpg"), bp1b, dpi = 600, width = 3, height = 4)
+ggsave(file.path(dir_fig,"figure_itc_2ndharm_ASSRStudy2.pdf"), bp1b, dpi = 600, width = 3, height = 4)
+
+Dtmp2_itc = Dtmp2 # save for later
+```
+
+##### table
+```{r contrasts for ITCSmN, echo = rout}
+iv = "ItcSmN"
+Dtmp2 = getdiffs_SIV_s2(DSIV_s2, iv = iv)
+Dtmp2 = tableCIs(Dtmp2[,-c(1:3)])
+Dtmp2 %>%
+  kable(digits = 3, caption = "Study IV s2") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = F, position = 'left')
+```
+
+### Study V: 20-, 40-, and 80-Hz ASSRs {.tabset}
+Activity at: 
+  40 Hz (second harmonic) for 20-Hz ASSRs, 
+  80 Hz (second harmonic) for 40-Hz ASSRs,
+  160 Hz (second harmonic) for 80-Hz ASSRs
+
+#### Ampl SmN {.tabset}
+Amplitude signal minus noise (SmN)  
+
+##### plot
+```{r plot AmpSmN SV, echo = rout}
+iv = "AmpSmN"
+Dtmp3 = getdiffs_SV(DSV, iv = iv)
+myylim = c(min(Dtmp3), max(Dtmp3)) 
+Dtmp3 = Dtmp3[,c(10:27)]
+Dtmp3 = cbind(DSV$fp, Dtmp3)
+
+Dtmp3a = Dtmp3[,c(1,2:7)]
+colnames(Dtmp3a) = c('fp', 'no', 'low', 'high', 'no-low','no-high','low-high')
+bp3a = plotoverlay(dm = Dtmp3a,lbl = paste0("20 Hz"), dvy = "Mean SmN amplitude (µV)", myylim)
+Dtmp3b = Dtmp3[,c(1,8:13)]
+colnames(Dtmp3b) = c('fp', 'no', 'low', 'high', 'no-low','no-high','low-high')
+bp3b = plotoverlay(dm = Dtmp3b,lbl = paste0("40 Hz"), dvy = "", myylim)
+Dtmp3c = Dtmp3[,c(1,14:19)]
+colnames(Dtmp3c) = c('fp', 'no', 'low', 'high', 'no-low','no-high','low-high')
+bp3c = plotoverlay(dm = Dtmp3c,lbl = paste0("80 Hz"), dvy = "", myylim)
+grid.arrange(bp3a, bp3b, bp3c, ncol = 3)
+bp3 = arrangeGrob(bp3a, bp3b, bp3c, ncol = 3)
+
+ggsave(file.path(dir_fig,"figure_amp_2ndharm_ASSR2.jpg"), bp3, dpi = 600, width = 7, height = 4)
+ggsave(file.path(dir_fig,"figure_amp_2ndharm_ASSR2.pdf"), bp3, dpi = 600, width = 7, height = 4)
+
+Dtmp3_amp = Dtmp3 # save for later
+colnames(Dtmp3_amp)[1] = "fp"
+```
+
+##### table
+```{r contrasts AmpSmN SV, echo = rout}
+iv = "AmpSmN"
+Dtmp3 = getdiffs_SV(DSV, iv = iv)
+Dtmp3 = tableCIs(Dtmp3[,-c(1:9)])
+Dtmp3 %>%
+  kable(digits = 3, caption = "Study V") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = F, position = 'left')
+```
+
+#### ITC SmN  {.tabset}
+Intertrial coherence signal minus noise (SmN) 
+
+##### plot
+```{r plot ITCSmN SV, echo = rout}
+iv = "ItcSmN"
+
+Dtmp3 = getdiffs_SV(DSV, iv = iv)
+myylim = c(-0.3, 0.5) 
+Dtmp3 = Dtmp3[,c(10:27)]
+Dtmp3 = cbind(DSV$fp, Dtmp3)
+
+Dtmp3a = Dtmp3[,c(1,2:7)]
+colnames(Dtmp3a) = c('fp', 'no', 'low', 'high', 'no-low','no-high','low-high')
+bp3a = plotoverlay(dm = Dtmp3a,lbl = paste0("20 Hz"), dvy = "Mean SmN ITC", myylim)
+Dtmp3b = Dtmp3[,c(1,8:13)]
+colnames(Dtmp3b) = c('fp', 'no', 'low', 'high', 'no-low','no-high','low-high')
+bp3b = plotoverlay(dm = Dtmp3b,lbl = paste0("40 Hz"), dvy = "", myylim)
+Dtmp3c = Dtmp3[,c(1,14:19)]
+colnames(Dtmp3c) = c('fp', 'no', 'low', 'high', 'no-low','no-high','low-high')
+bp3c = plotoverlay(dm = Dtmp3c,lbl = paste0("80 Hz"), dvy = "", myylim)
+grid.arrange(bp3a, bp3b, bp3c, ncol = 3)
+bp3 = arrangeGrob(bp3a, bp3b, bp3c, ncol = 3)
+
+ggsave(file.path(dir_fig,"figure_itc_2ndharm_ASSR2.jpg"), bp3, dpi = 600, width = 7, height = 4)
+ggsave(file.path(dir_fig,"figure_itc_2ndharm_ASSR2.pdf"), bp3, dpi = 600, width = 7, height = 4)
+
+Dtmp3_itc = Dtmp3 # save for later
+colnames(Dtmp3_itc)[1] = "fp"
+```
+
+##### table
+```{r contrasts ITCSmN SV, echo = rout}
+iv = "ItcSmN"
+
+Dtmp3 = getdiffs_SV(DSV, iv = iv)
+Dtmp3 = tableCIs(Dtmp3[,-c(1:9)])
+Dtmp3 %>%
+  kable(digits = 3, caption = "Study V") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = F, position = 'left')
+```
+
+## BF for Study V {.tabset}
+Study V included 3 different modulation frequencies: 20, 40, and 80 Hz.
+Below are the results for 2nd harmonic for each frequency separately and 
+averaged across all frequencies
+
+To conduct BF analyses, we defined the upper limits on the basis of the present data, separately for each measure and frequency.    
+
+
+**Low minus high**  
+  One analysis considered **low load** as the baseline, and the H1 model was defined as a uniform distribution between 0 (as lower limit, LL) and the present mean of low load (as upper limit, UL).  
+
+Low minus high = load effect  
+
+**No minus low/high**  
+  Other analyses considered **no load** as the baseline, and the H1 model was defined as a uniform distribution between 0 (as lower limit, LL) and the present mean of no load (as upper limit, UL).  
+
+No minus low = task effect  
+No minus high = combined effect of task and load  
+
+
+In the table, LL and UL refer to the 95% CIs of the means (and not to the LL and UL of the H1 models).  
+
+```{r select data from Study V, echo = rout}
+# ASSR2 20 Hz
+Dtmpa3_20 = subset(Dtmp3_amp, 
+               select=c(fp, no20Hz, lo20Hz, hi20Hz))
+colnames(Dtmpa3_20) = c('fp', 'AmpSmNno', 'AmpSmNlo', 'AmpSmNhi')
+Dtmpi3_20 = subset(Dtmp3_itc, 
+               select=c(no20Hz, lo20Hz, hi20Hz))
+colnames(Dtmpi3_20) = c('ItcSmNno', 'ItcSmNlo', 'ItcSmNhi')
+Dtmp3_20 = cbind(Dtmpa3_20, Dtmpi3_20)
+Dtmp3_20$freq = 20
+
+# ASSR2 40 Hz
+Dtmpa3_40 = subset(Dtmp3_amp, 
+               select=c(fp, no40Hz, lo40Hz, hi40Hz))
+colnames(Dtmpa3_40) = c('fp', 'AmpSmNno', 'AmpSmNlo', 'AmpSmNhi')
+Dtmpi3_40 = subset(Dtmp3_itc, 
+               select=c(no40Hz, lo40Hz, hi40Hz))
+colnames(Dtmpi3_40) = c('ItcSmNno', 'ItcSmNlo', 'ItcSmNhi')
+Dtmp3_40 = cbind(Dtmpa3_40, Dtmpi3_40)
+Dtmp3_40$study = 40
+
+# ASSR2 80 Hz
+Dtmpa3_80 = subset(Dtmp3_amp, 
+               select=c(fp, no80Hz, lo80Hz, hi80Hz))
+colnames(Dtmpa3_80) = c('fp', 'AmpSmNno', 'AmpSmNlo', 'AmpSmNhi')
+Dtmpi3_80 = subset(Dtmp3_itc, 
+               select=c(no80Hz, lo80Hz, hi80Hz))
+colnames(Dtmpi3_80) = c('ItcSmNno', 'ItcSmNlo', 'ItcSmNhi')
+Dtmp3_80 = cbind(Dtmpa3_80, Dtmpi3_80)
+Dtmp3_80$study = 80
+
+# combined amp
+Davg_no = subset(Dtmp3_amp, 
+               select=c(no20Hz, no40Hz, no80Hz))
+
+Davg_lo = subset(Dtmp3_amp, 
+               select=c(lo20Hz, lo40Hz, lo80Hz))
+
+Davg_hi = subset(Dtmp3_amp, 
+               select=c(hi20Hz, hi40Hz, hi80Hz))
+
+Davg = data.frame(Dtmp3_amp['fp'])
+Davg$no = rowMeans(Davg_no)
+Davg$lo = rowMeans(Davg_lo)
+Davg$hi = rowMeans(Davg_hi)
+colnames(Davg) = c('fp', 'AmpSmNno', 'AmpSmNlo', 'AmpSmNhi')
+
+
+# combined itc
+Davgi_no = subset(Dtmp3_itc, 
+               select=c(no20Hz, no40Hz, no80Hz))
+
+Davgi_lo = subset(Dtmp3_itc, 
+               select=c(lo20Hz, lo40Hz, lo80Hz))
+
+Davgi_hi = subset(Dtmp3_itc, 
+               select=c(hi20Hz, hi40Hz, hi80Hz))
+
+Davgi = data.frame(Dtmp3_amp['fp'])
+Davgi$no = rowMeans(Davgi_no)
+Davgi$lo = rowMeans(Davgi_lo)
+Davgi$hi = rowMeans(Davgi_hi)
+colnames(Davgi) = c('fp', 'ItcSmNno', 'ItcSmNlo', 'ItcSmNhi')
+```
+
+### load effect: low minus high
+High load is used as the upper limit of the H1 model.  
+H1 model:  
+LL = 0  
+UL = low load  
+In the table, LL and UL refer to the 95% CIs of the means (and not to the LL and UL of the H1 models).
+```{r Study V data hiMlo, echo = rout}
+DBF10 = numeric()
+
+# create matrix with measure, study, n, mean high load, 
+# diff hiMlo, LL 95%CI, UL 95%CI, BF10 hiMlo, BF01 hiMlo,
+LL = 0
+
+# amp
+# 20 Hz
+UL = mean(Dtmp3_20$AmpSmNlo)
+tmp = Dtmp3_20$AmpSmNlo-Dtmp3_20$AmpSmNhi
+DBF10 = rbind(DBF10, c('20 Hz','Amp', nrow(Dtmp3_20), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# 40 Hz
+UL = mean(Dtmp3_40$AmpSmNlo)
+tmp = Dtmp3_40$AmpSmNlo-Dtmp3_40$AmpSmNhi
+DBF10 = rbind(DBF10, c('40 Hz','Amp', nrow(Dtmp3_40), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# 80 Hz
+UL = mean(Dtmp3_80$AmpSmNlo)
+tmp = Dtmp3_80$AmpSmNlo-Dtmp3_80$AmpSmNhi
+DBF10 = rbind(DBF10, c('80 Hz', 'Amp', nrow(Dtmp3_80), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# combined
+UL = mean(Davg$AmpSmNlo)
+tmp = Davg$AmpSmNlo-Davg$AmpSmNhi
+DBF10 = rbind(DBF10, c('Combined','Amp', nrow(Davg), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# itc
+# 20 Hz
+UL = mean(Dtmp3_20$ItcSmNlo)
+tmp = Dtmp3_20$ItcSmNlo-Dtmp3_20$ItcSmNhi
+DBF10 = rbind(DBF10, c('20 Hz','Itc', nrow(Dtmp3_20), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# 40 Hz
+UL = mean(Dtmp3_40$ItcSmNlo)
+tmp = Dtmp3_40$ItcSmNlo-Dtmp3_40$ItcSmNhi
+DBF10 = rbind(DBF10, c('40 Hz','Itc', nrow(Dtmp3_40), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# 80 Hz
+UL = mean(Dtmp3_80$ItcSmNlo)
+tmp = Dtmp3_80$ItcSmNlo-Dtmp3_80$ItcSmNhi
+DBF10 = rbind(DBF10, c('80 Hz', 'Itc', nrow(Dtmp3_80), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# combined
+UL = mean(Davgi$ItcSmNlo)
+tmp = Davgi$ItcSmNlo-Davgi$ItcSmNhi
+DBF10 = rbind(DBF10, c('Combined','Itc', nrow(Davgi), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+
+DBF10 = as.data.frame(DBF10)
+colnames(DBF10)=c('Freq','Measure','N','Mhi',
+                  'M-loMhi','LL-loMhi','UL-loMhi','BF10-loMhi','BF01-loMhi')
+
+# convert character to numeric
+i = 3:9
+DBF10[, i] = apply(DBF10[,i],2, function(x) as.numeric(as.character(x)))
+DBF10 %>%
+  kable(digits = 3,
+        col.names = c('Freq','Measure','N','Mean',
+                      'Mean','LL', 'UL', 'BF10', 'BF01')) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = F, position = 'left') %>%
+  add_header_above(c(" " = 3, "low" = 1, "low minus high" = 5)) %>%
+  row_spec(c(4,8), bold = T)
+```
+
+### task effect: no minus low
+Low load is used as the upper limit of the H1 model.  
+H1 model:  
+LL = 0  
+UL = no load  
+In the table, LL and UL refer to the 95% CIs of the means (and not to the LL and UL of the H1 models).  
+```{r Study V data loMno, echo = rout}
+# compare low with no load
+DBF10 = numeric()
+
+# create matrix with measure, study, n, mean low load, 
+# diff loMhi, LL 95%CI, UL 95%CI, BF01 loMhi
+LL = 0
+
+# amp
+# 20 Hz
+UL = mean(Dtmp3_20$AmpSmNno)
+tmp = Dtmp3_20$AmpSmNno-Dtmp3_20$AmpSmNlo
+DBF10 = rbind(DBF10, c('20 Hz','Amp', nrow(Dtmp3_20), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# 40 Hz
+UL = mean(Dtmp3_40$AmpSmNno)
+tmp = Dtmp3_40$AmpSmNno-Dtmp3_40$AmpSmNlo
+DBF10 = rbind(DBF10, c('40 Hz','Amp', nrow(Dtmp3_40), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# 80 Hz
+UL = mean(Dtmp3_80$AmpSmNno)
+tmp = Dtmp3_80$AmpSmNno-Dtmp3_80$AmpSmNlo
+DBF10 = rbind(DBF10, c('80 Hz', 'Amp', nrow(Dtmp3_80), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# combined
+UL = mean(Davg$AmpSmNno)
+tmp = Davg$AmpSmNno-Davg$AmpSmNlo
+DBF10 = rbind(DBF10, c('Combined','Amp', nrow(Davg), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# itc
+# 20 Hz
+UL = mean(Dtmp3_20$ItcSmNno)
+tmp = Dtmp3_20$ItcSmNno-Dtmp3_20$ItcSmNlo
+DBF10 = rbind(DBF10, c('20 Hz','Itc', nrow(Dtmp3_20), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# 40 Hz
+UL = mean(Dtmp3_40$ItcSmNno)
+tmp = Dtmp3_40$ItcSmNno-Dtmp3_40$ItcSmNlo
+DBF10 = rbind(DBF10, c('40 Hz','Itc', nrow(Dtmp3_40), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# 80 Hz
+UL = mean(Dtmp3_80$ItcSmNno)
+tmp = Dtmp3_80$ItcSmNno-Dtmp3_80$ItcSmNlo
+DBF10 = rbind(DBF10, c('80 Hz', 'Itc', nrow(Dtmp3_80), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# combined
+UL = mean(Davgi$ItcSmNno)
+tmp = Davgi$ItcSmNno-Davgi$ItcSmNlo
+DBF10 = rbind(DBF10, c('Combined','Itc', nrow(Davgi), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+
+DBF10 = as.data.frame(DBF10)
+colnames(DBF10)=c('Freq','Measure','N','Mno',
+                  'M-noMlo','LL-noMlo','UL-noMlo','BF10-noMlo','BF01-noMlo')
+
+# convert character to numeric
+i = 3:9
+DBF10[, i] = apply(DBF10[,i],2, function(x) as.numeric(as.character(x)))
+DBF10 %>%
+  kable(digits = 3,
+        col.names = c('Freq','Measure','N','Mean',
+                      'Mean','LL', 'UL', 'BF10', 'BF01')) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = F, position = 'left') %>%
+  add_header_above(c(" " = 3, "no" = 1, "no minus low" = 5)) %>%
+  row_spec(c(4,8), bold = T)
+```
+### combined effect: no minus high
+High load is used as the upper limit of the H1 model.  
+H1 model:  
+LL = 0  
+UL = no load  
+
+In the table, LL and UL refer to the 95% CIs of the means (and not to the LL and UL of the H1 models).
+```{r Study V data hiMno, echo = rout}
+
+DBF10 = numeric()
+
+# create matrix with measure, study, n, mean no load, 
+# diff hiMno, LL 95%CI, UL 95%CI, BF10 hiMno, BF01 hiMno,
+# diff hiMlo, LL 95%CI, UL 95%CI, BF10 hiMlo, BF01 hiMlo,
+LL = 0
+
+# amp
+# 20 Hz
+UL = mean(Dtmp3_20$AmpSmNno)
+tmp = Dtmp3_20$AmpSmNno-Dtmp3_20$AmpSmNhi
+DBF10 = rbind(DBF10, c('20 Hz','Amp', nrow(Dtmp3_20), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# 40 Hz
+UL = mean(Dtmp3_40$AmpSmNno)
+tmp = Dtmp3_40$AmpSmNno-Dtmp3_40$AmpSmNhi
+DBF10 = rbind(DBF10, c('40 Hz','Amp', nrow(Dtmp3_40), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# 80 Hz
+UL = mean(Dtmp3_80$AmpSmNno)
+tmp = Dtmp3_80$AmpSmNno-Dtmp3_80$AmpSmNhi
+DBF10 = rbind(DBF10, c('80 Hz', 'Amp', nrow(Dtmp3_80), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# combined
+UL = mean(Davg$AmpSmNno)
+tmp = Davg$AmpSmNno-Davg$AmpSmNhi
+DBF10 = rbind(DBF10, c('Combined','Amp', nrow(Davg), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# itc
+# 20 Hz
+UL = mean(Dtmp3_20$ItcSmNno)
+tmp = Dtmp3_20$ItcSmNno-Dtmp3_20$ItcSmNhi
+DBF10 = rbind(DBF10, c('20 Hz','Itc', nrow(Dtmp3_20), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# 40 Hz
+UL = mean(Dtmp3_40$ItcSmNno)
+tmp = Dtmp3_40$ItcSmNno-Dtmp3_40$ItcSmNhi
+DBF10 = rbind(DBF10, c('40 Hz','Itc', nrow(Dtmp3_40), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# 80 Hz
+UL = mean(Dtmp3_80$ItcSmNno)
+tmp = Dtmp3_80$ItcSmNno-Dtmp3_80$ItcSmNhi
+DBF10 = rbind(DBF10, c('80 Hz', 'Itc', nrow(Dtmp3_80), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# combined
+UL = mean(Davgi$ItcSmNno)
+tmp = Davgi$ItcSmNno-Davgi$ItcSmNhi
+DBF10 = rbind(DBF10, c('Combined','Itc', nrow(Davgi), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+
+DBF10 = as.data.frame(DBF10)
+colnames(DBF10)=c('Freq','Measure','N','Mno',
+                  'M-noMhi','LL-noMhi','UL-noMhi','BF10-noMhi','BF01-noMhi')
+
+# convert character to numeric
+i = 3:9
+DBF10[, i] = apply(DBF10[,i],2, function(x) as.numeric(as.character(x)))
+DBF10 %>%
+  kable(digits = 3,
+        col.names = c('Freq','Measure','N','Mean',
+                      'Mean','LL', 'UL', 'BF10', 'BF01')) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = F, position = 'left') %>%
+  add_header_above(c(" " = 3, "no" = 1, "no minus high" = 5)) %>%
+  row_spec(c(4,8), bold = T)
+```
+
+
+## BF for 40-Hz: combined data {.tabset}
+Study IV s1 (N = 43) in Szychowska & Wiens (2020). This study included **low and high** load.    
+
+Study IV s2 (N = 45) in Szychowska & Wiens (2020). This study included **no, low, high, and very high** load.
+
+Study V (N = 33)  in Szychowska & Wiens (2020). This study included **no, low, high** load.
+```{r select 40 Hz data, echo = rout}
+# ASSR Study1
+Dtmpa1 = subset(Dtmp_amp, 
+               select=c(fp, lo, hi))
+colnames(Dtmpa1) = c('fp', 'AmpSmNlo', 'AmpSmNhi')
+Dtmpi1 = subset(Dtmp_itc, 
+               select=c(lo, hi))
+colnames(Dtmpi1) = c('ItcSmNlo', 'ItcSmNhi')
+Dtmp1 = cbind(Dtmpa1, Dtmpi1)
+Dtmp1$study = 'Study IV s1'
+
+# ASSR Study2
+Dtmpa2 = subset(Dtmp2_amp, 
+               select=c(fp, no, lo, hi))
+colnames(Dtmpa2) = c('fp', 'AmpSmNno', 'AmpSmNlo', 'AmpSmNhi')
+Dtmpi2 = subset(Dtmp2_itc, 
+               select=c(no, lo, hi))
+colnames(Dtmpi2) = c('ItcSmNno', 'ItcSmNlo', 'ItcSmNhi')
+Dtmp2 = cbind(Dtmpa2, Dtmpi2)
+Dtmp2$study = 'Study IV s2'
+
+# ASSR2
+Dtmpa3 = subset(Dtmp3_amp, 
+               select=c(fp, no40Hz, lo40Hz, hi40Hz))
+colnames(Dtmpa3) = c('fp', 'AmpSmNno', 'AmpSmNlo', 'AmpSmNhi')
+Dtmpi3 = subset(Dtmp3_itc, 
+               select=c(no40Hz, lo40Hz, hi40Hz))
+colnames(Dtmpi3) = c('ItcSmNno', 'ItcSmNlo', 'ItcSmNhi')
+Dtmp3 = cbind(Dtmpa3, Dtmpi3)
+Dtmp3$study = 'Study V'
+
+
+Dall = merge(Dtmp1, Dtmp2, all = T)
+Dall = merge(Dall, Dtmp3, all = T)
+
+D2and3 = merge(Dtmp2, Dtmp3, all = T)
+```
+
+### load effect: low minus high
+Low load is used as the upper limit of the H1 model.  
+H1 model:  
+LL = 0  
+UL = low load  
+In the table, LL and UL refer to the 95% CIs of the means (and not to the LL and UL of the H1 models).
+```{r big data hiMlo, echo = rout}
+DBF10 = numeric()
+
+# create matrix with measure, study, n, mean no load, 
+# diff hiMlo, LL 95%CI, UL 95%CI, BF10 hiMlo, BF01 hiMlo,
+LL = 0
+
+# amp
+# study 1
+UL = mean(Dtmp1$AmpSmNlo)
+tmp = Dtmp1$AmpSmNlo-Dtmp1$AmpSmNhi
+DBF10 = rbind(DBF10, c('Study IV s1','Amp', nrow(Dtmp1), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# study 2
+UL = mean(Dtmp2$AmpSmNlo)
+tmp = Dtmp2$AmpSmNlo-Dtmp2$AmpSmNhi
+DBF10 = rbind(DBF10, c('Study IV s2','Amp', nrow(Dtmp2), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# ASSR2
+UL = mean(Dtmp3$AmpSmNlo)
+tmp = Dtmp3$AmpSmNlo-Dtmp3$AmpSmNhi
+DBF10 = rbind(DBF10, c('Study V', 'Amp', nrow(Dtmp3), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# combined
+UL = mean(Dall$AmpSmNlo)
+tmp = Dall$AmpSmNlo-Dall$AmpSmNhi
+DBF10 = rbind(DBF10, c('Combined','Amp', nrow(Dall), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# itc
+# study 1
+UL = mean(Dtmp1$ItcSmNlo)
+tmp = Dtmp1$ItcSmNlo-Dtmp1$ItcSmNhi
+DBF10 = rbind(DBF10, c('Study IV s1','Itc', nrow(Dtmp1), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# study 2
+UL = mean(Dtmp2$ItcSmNlo)
+tmp = Dtmp2$ItcSmNlo-Dtmp2$ItcSmNhi
+DBF10 = rbind(DBF10, c('Study IV s2','Itc', nrow(Dtmp2), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# ASSR2
+UL = mean(Dtmp3$ItcSmNlo)
+tmp = Dtmp3$ItcSmNhi-Dtmp3$ItcSmNlo
+DBF10 = rbind(DBF10, c('Study V', 'Itc', nrow(Dtmp3), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# combined
+UL = mean(Dall$ItcSmNlo)
+tmp = Dall$ItcSmNlo-Dall$ItcSmNhi
+DBF10 = rbind(DBF10, c('Combined', 'Itc', nrow(Dall), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+
+DBF10 = as.data.frame(DBF10)
+colnames(DBF10)=c('Study','Measure','N','Mlo',
+                  'M-loMhi','LL-loMhi','UL-loMhi','BF10-loMhi','BF01-loMhi')
+
+# convert character to numeric
+i = 3:9
+DBF10[, i] = apply(DBF10[,i],2, function(x) as.numeric(as.character(x)))
+DBF10 %>%
+  kable(digits = 3,
+        col.names = c('Study','Measure','N','Mean',
+                      'Mean','LL', 'UL', 'BF10', 'BF01')) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = F, position = 'left') %>%
+  add_header_above(c(" " = 3, "low" = 1, "low minus high" = 5)) %>%
+  row_spec(c(4,8), bold = T)
+```
+
+### task effect: no minus low
+Low load is used as the upper limit of the H1 model.  
+H1 model:  
+LL = 0  
+UL = no load  
+
+Note that Study IV s1 is excluded because no load was not administered. 
+
+In the table, LL and UL refer to the 95% CIs of the means (and not to the LL and UL of the H1 models).  
+```{r big data loMno, echo = rout}
+# compare low with no load
+DBF10 = numeric()
+
+# create matrix with measure, study, n, mean low load, 
+# diff loMhi, LL 95%CI, UL 95%CI, BF01 loMhi
+LL = 0
+
+# amp
+# study 2
+UL = mean(Dtmp2$AmpSmNno)
+tmp = Dtmp2$AmpSmNno-Dtmp2$AmpSmNlo
+DBF10 = rbind(DBF10, c('Study IV s2','Amp', nrow(Dtmp2), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# ASSR2
+UL = mean(Dtmp3$AmpSmNno)
+tmp = Dtmp3$AmpSmNno-Dtmp3$AmpSmNlo
+DBF10 = rbind(DBF10, c('Study V', 'Amp', nrow(Dtmp3), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# combined
+UL = mean(D2and3$AmpSmNno)
+tmp = D2and3$AmpSmNno-D2and3$AmpSmNlo
+DBF10 = rbind(DBF10, c('Combined','Amp', nrow(D2and3), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# itc
+# study 2
+UL = mean(Dtmp2$ItcSmNno)
+tmp = Dtmp2$ItcSmNno-Dtmp2$ItcSmNlo
+DBF10 = rbind(DBF10, c('Study IV s2','Itc', nrow(Dtmp2), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# ASSR2
+UL = mean(Dtmp3$ItcSmNno)
+tmp = Dtmp3$ItcSmNno-Dtmp3$ItcSmNlo
+DBF10 = rbind(DBF10, c('Study V', 'Itc', nrow(Dtmp3), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# combined
+UL = mean(D2and3$ItcSmNno)
+tmp = D2and3$ItcSmNno-D2and3$ItcSmNlo
+DBF10 = rbind(DBF10, c('Combined', 'Itc', nrow(D2and3), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+
+DBF10 = as.data.frame(DBF10)
+colnames(DBF10)=c('Study','Measure','N','Mno',
+                  'M-noMlo','LL-noMlo','UL-noMlo','BF10-noMlo','BF01-noMlo')
+
+# convert character to numeric
+i = 3:9
+DBF10[, i] = apply(DBF10[,i],2, function(x) as.numeric(as.character(x)))
+DBF10 %>%
+  kable(digits = 3,
+        col.names = c('Study','Measure','N','Mean',
+                      'Mean','LL', 'UL', 'BF10', 'BF01')) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = F, position = 'left') %>%
+  add_header_above(c(" " = 3, "no" = 1, "no minus low" = 5)) %>%
+  row_spec(c(3,6), bold = T)
+```
+
+
+### combined effect: no minus high
+High load is used as the upper limit of the H1 model.  
+H1 model:  
+LL = 0  
+UL = no load  
+
+Note that Study IV s1 is excluded because no load was not administered.  
+
+In the table, LL and UL refer to the 95% CIs of the means (and not to the LL and UL of the H1 models).
+```{r big data hiMno, echo = rout}
+
+Dall = merge(Dtmp1, Dtmp2, all = T)
+Dall = merge(Dall, Dtmp3, all = T)
+
+D2and3 = merge(Dtmp2, Dtmp3, all = T)
+
+
+DBF10 = numeric()
+
+# create matrix with measure, study, n, mean no load, 
+# diff hiMno, LL 95%CI, UL 95%CI, BF10 hiMno, BF01 hiMno,
+# diff hiMlo, LL 95%CI, UL 95%CI, BF10 hiMlo, BF01 hiMlo,
+LL = 0
+
+# amp
+# study 2
+UL = mean(Dtmp2$AmpSmNno)
+tmp = Dtmp2$AmpSmNno-Dtmp2$AmpSmNhi
+DBF10 = rbind(DBF10, c('Study IV s2','Amp', nrow(Dtmp2), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# ASSR2
+UL = mean(Dtmp3$AmpSmNno)
+tmp = Dtmp3$AmpSmNno-Dtmp3$AmpSmNhi
+DBF10 = rbind(DBF10, c('Study V', 'Amp', nrow(Dtmp3), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# combined
+UL = mean(D2and3$AmpSmNno)
+tmp = D2and3$AmpSmNno-D2and3$AmpSmNhi
+DBF10 = rbind(DBF10, c('Combined','Amp', nrow(D2and3), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# itc
+# study 2
+UL = mean(Dtmp2$ItcSmNno)
+tmp = Dtmp2$ItcSmNno-Dtmp2$ItcSmNhi
+DBF10 = rbind(DBF10, c('Study IV s2','Itc', nrow(Dtmp2), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# ASSR2
+UL = mean(Dtmp3$ItcSmNno)
+tmp = Dtmp3$ItcSmNno-Dtmp3$ItcSmNhi
+DBF10 = rbind(DBF10, c('Study V', 'Itc', nrow(Dtmp3), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+# combined
+UL = mean(D2and3$ItcSmNno)
+tmp = D2and3$ItcSmNno-D2and3$ItcSmNhi
+DBF10 = rbind(DBF10, c('Combined', 'Itc', nrow(D2and3), UL, 
+                       mean(tmp), ci(tmp), 1/BFfitH1(LL = 0, UL, tmp), BFfitH1(LL = 0, UL, tmp)))
+
+
+DBF10 = as.data.frame(DBF10)
+colnames(DBF10)=c('Study','Measure','N','Mno',
+                  'M-noMhi','LL-noMhi','UL-noMhi','BF10-noMhi','BF01-noMhi')
+
+# convert character to numeric
+i = 3:9
+DBF10[, i] = apply(DBF10[,i],2, function(x) as.numeric(as.character(x)))
+DBF10 %>%
+  kable(digits = 3,
+        col.names = c('Study','Measure','N','Mean',
+                      'Mean','LL', 'UL', 'BF10', 'BF01')) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = F, position = 'left') %>%
+  add_header_above(c(" " = 3, "no" = 1, "no minus high" = 5)) %>%
+  row_spec(c(3,6), bold = T)
+```
